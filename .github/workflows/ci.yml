@@ -19,10 +19,8 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8 black
+      - name: Install dependencies
+        run: pip install flake8 black
 
       - name: Lint with flake8
         run: flake8 . --max-line-length=120
@@ -32,3 +30,17 @@ jobs:
 
       - name: Run script
         run: python main.py
+
+      - name: Send Telegram success
+        if: success()
+        run: |
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d text=" CI PASSED%0A${{ github.repository }}%0A${{ github.ref_name }}"
+
+      - name: Send Telegram failure
+        if: failure()
+        run: |
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d text=" CI FAILED%0A${{ github.repository }}%0A${{ github.ref_name }}"
