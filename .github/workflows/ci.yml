@@ -2,7 +2,7 @@ name: CI Check
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "develop"]
   pull_request:
     branches: ["main"]
 
@@ -31,16 +31,21 @@ jobs:
       - name: Run script
         run: python main.py
 
+      - name: Debug secrets (masked)
+        run: |
+          echo "Token exists: ${{ secrets.TELEGRAM_BOT_TOKEN != '' }}"
+          echo "Chat ID exists: ${{ secrets.TELEGRAM_CHAT_ID != '' }}"
+
       - name: Send Telegram success
         if: success()
         run: |
-          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          curl -v -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
           -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
           -d text=" CI PASSED%0A${{ github.repository }}%0A${{ github.ref_name }}"
 
       - name: Send Telegram failure
         if: failure()
         run: |
-          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          curl -v -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
           -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
           -d text=" CI FAILED%0A${{ github.repository }}%0A${{ github.ref_name }}"
